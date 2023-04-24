@@ -117,9 +117,8 @@ iso %>%
             title = "", output_file = "isolates.png")
 
 
-####################################
-#### ALPHA DIVERSITY
-
+#################  Alpha diversity measures ###############
+library(vegan)
 library(agricolae)
 library(ggplot2)
 library(readr)
@@ -129,11 +128,7 @@ library(metacoder)
 ## MGS:
 mgsotu_data <- read_tsv("mgs.tsv")
 
-
-print(mgsotu_data)
-
 mgssample_data <- read_tsv("mgs.txt", col_types = "cccccccccccccccc")
-print(mgssample_data)
 
 mgsobj <- parse_tax_data(mgsotu_data,
                          class_cols = "classification",
@@ -143,37 +138,31 @@ mgsobj <- parse_tax_data(mgsotu_data,
 
 mgsobj$data$class_data <- NULL
 names(mgsobj$data) <- "otu_counts"
-print(mgsobj)
-
-
 
 ###amp16S
 
 amp16otu_data <- read_csv("ampotu.csv")
 
 
-print(amp16otu_data)
-
-amp16sample_data <- read_tsv("amp16.txt", col_types = "cccccccccccccccc")
-print(amp16sample_data)
+amp16sample_data <- read_csv("meta.csv", col_types = "cccccccc")
 
 amp16obj <- parse_tax_data(amp16otu_data,
-                           class_cols = "classification",
-                           class_sep = ";",
-                           class_regex = "^([a-z]{0,1})_{0,2}(.*)$",
-                           class_key = c("tax_rank" = "taxon_rank", "name" = "taxon_name"))
+                         class_cols = "classification",
+                         class_sep = ";",
+                         class_regex = "^([a-z]{0,1})_{0,2}(.*)$",
+                         class_key = c("tax_rank" = "taxon_rank", "name" = "taxon_name"))
 
 
 
 amp16obj$data$class_data <- NULL
 names(amp16obj$data) <- "otu_counts"
-print(amp16obj)
+
 
 ###amp18S
 
 amp18otu_data <- read_csv("18sotu.csv")
 
-amp18sample_data <- read_tsv("amp16.txt", col_types = "cccccccccccccccc")
+amp18sample_data <- read_csv("meta.csv")
 
 amp18obj <- parse_tax_data(amp18otu_data,
                            class_cols = "classification",
@@ -185,202 +174,106 @@ amp18obj <- parse_tax_data(amp18otu_data,
 
 amp18obj$data$class_data <- NULL
 names(amp18obj$data) <- "otu_counts"
-print(amp18obj)
+
 
 
 
 #########alphadiv MGS
 ####### Shannon
-mgssample_data$alpha <- diversity(mgsobj$data$otu_counts[, mgssample_data$SampleID],
+mgssample_data$shan <- diversity(mgsobj$data$otu_counts[, mgssample_data$SampleID],
                                   MARGIN = 2,
                                   index = "shannon")
 
-ggplot(mgssample_data, aes(x = Name, y = alpha)) + 
-  geom_boxplot()
 
-anova_result <- aov(alpha ~ Name, mgssample_data)
-summary(anova_result)
-
-tukey_result <- HSD.test(anova_result, "Name", group = TRUE)
-print(tukey_result)
-
-group_data <- tukey_result$groups[order(rownames(tukey_result$groups)),]
-
-ggsave("mgsshan.png", ggplot(mgssample_data, aes(x = Name, y = alpha)) +
-         geom_text(data = data.frame(),
-                   aes(x = rownames(group_data), y = max(0,6),  label = group_data$groups),
-                   col = 'black',
-                   size = 10) +
-         geom_boxplot() + scale_y_continuous(limits = c(0, 6)) +  ggtitle("Metagenome Shannon") +
-         xlab("") + theme_minimal() +
-         ylab("") + theme(text=element_text(size=28), #change font size of all text
-                          axis.text=element_text(size=28), #change font size of axis text
-                          axis.title=element_text(size=28), #change font size of axis titles
-                          plot.title=element_text(size=28), #change font size of plot title
-                          legend.text=element_text(size=28), #change font size of legend text
-                          legend.title=element_text(size=28))) #change font size of legend title 
 
 
 ##########invsimpson
-mgssample_data$alpha <- diversity(mgsobj$data$otu_counts[, mgssample_data$SampleID],
+mgssample_data$sim <- diversity(mgsobj$data$otu_counts[, mgssample_data$SampleID],
                                   MARGIN = 2,
                                   index = "invsimpson")
-hist(mgssample_data$alpha)
-library(ggplot2)
-ggplot(mgssample_data, aes(x = Name, y = alpha)) + 
-  geom_boxplot()
-
-anova_result <- aov(alpha ~ Name, mgssample_data)
-summary(anova_result)
-library(agricolae)
-tukey_result <- HSD.test(anova_result, "Name", group = TRUE)
-print(tukey_result)
-
-
-group_data <- tukey_result$groups[order(rownames(tukey_result$groups)),]
-
-ggsave("mgssim.png",ggplot(mgssample_data, aes(x = Name, y = alpha)) +
-         geom_text(data = data.frame(),
-                   aes(x = rownames(group_data), y = max(mgssample_data$alpha) + 1, label = group_data$groups),
-                   col = 'black',
-                   size = 10) +
-         geom_boxplot() + scale_y_continuous(limits = c(0, 100)) +
-         ggtitle("Metagenome Inverse Simpson") +
-         xlab("") + theme_minimal() +
-         ylab("") + theme(text=element_text(size=28), #change font size of all text
-                          axis.text=element_text(size=28), #change font size of axis text
-                          axis.title=element_text(size=28), #change font size of axis titles
-                          plot.title=element_text(size=28), #change font size of plot title
-                          legend.text=element_text(size=28), #change font size of legend text
-                          legend.title=element_text(size=28))) #change font size of legend title
 
 
 
 #########alphadiv 16S
 ####### Shannon
-amp16sample_data$alpha <- diversity(amp16obj$data$otu_counts[, amp16sample_data$SampleID],
-                                    MARGIN = 2,
-                                    index = "shannon")
+amp16sample_data$shan <- diversity(amp16obj$data$otu_counts[, amp16sample_data$SampleID],
+                                  MARGIN = 2,
+                                  index = "shannon")
 
-ggplot(amp16sample_data, aes(x = Name, y = alpha)) + 
-  geom_boxplot()
-
-anova_result <- aov(alpha ~ Name, amp16sample_data)
-summary(anova_result)
-
-tukey_result <- HSD.test(anova_result, "Name", group = TRUE)
-print(tukey_result)
-
-group_data <- tukey_result$groups[order(rownames(tukey_result$groups)),]
-ggsave("16sshan.png",ggplot(amp16sample_data, aes(x = Name, y = alpha)) +
-         geom_text(data = data.frame(),
-                   aes(x = rownames(group_data), y = max(amp16sample_data$alpha) + 1, label = group_data$groups),
-                   col = 'black',
-                   size = 10) +
-         geom_boxplot() + scale_y_continuous(limits = c(0, 6)) +
-         ggtitle("16S amplicons Shannon") +
-         xlab("") + theme_minimal() +
-         ylab("") + theme(text=element_text(size=28), #change font size of all text
-                          axis.text=element_text(size=28), #change font size of axis text
-                          axis.title=element_text(size=28), #change font size of axis titles
-                          plot.title=element_text(size=28), #change font size of plot title
-                          legend.text=element_text(size=28), #change font size of legend text
-                          legend.title=element_text(size=28))) #change font size of legend title
 
 ##########invsimpson
-amp16sample_data$alpha <- diversity(amp16obj$data$otu_counts[, amp16sample_data$SampleID],
-                                    MARGIN = 2,
-                                    index = "invsimpson")
-hist(amp16sample_data$alpha)
-library(ggplot2)
-ggplot(amp16sample_data, aes(x = Name, y = alpha)) + 
-  geom_boxplot()
-
-anova_result <- aov(alpha ~ Name, amp16sample_data)
-summary(anova_result)
-library(agricolae)
-amp16tukey_result <- HSD.test(anova_result, "Name", group = TRUE)
-print(tukey_result)
-
-amp16group_data <- amp16tukey_result$groups[order(rownames(amp16tukey_result$groups)),]
-ggsave("16ssim.png",ggplot(amp16sample_data, aes(x = Name, y = alpha)) +
-         geom_text(data = data.frame(),
-                   aes(x = rownames(group_data), y = max(amp16sample_data$alpha) + 1, label = amp16group_data$groups),
-                   col = 'black',
-                   size = 10) +
-         geom_boxplot() + scale_y_continuous(limits = c(0, 100)) +
-         ggtitle("16S amplicons Inverse Simpson") +
-         xlab("") + theme_minimal() +
-         ylab("") + theme(text=element_text(size=28), #change font size of all text
-                          axis.text=element_text(size=28), #change font size of axis text
-                          axis.title=element_text(size=28), #change font size of axis titles
-                          plot.title=element_text(size=28), #change font size of plot title
-                          legend.text=element_text(size=28), #change font size of legend text
-                          legend.title=element_text(size=28))) #change font size of legend title
-
+amp16sample_data$sim <- diversity(amp16obj$data$otu_counts[, amp16sample_data$SampleID],
+                                  MARGIN = 2,
+                                  index = "invsimpson")
 
 
 #########alphadiv 18S
 ####### Shannon
-amp18sample_data$alpha <- diversity(amp18obj$data$otu_counts[, amp18sample_data$SampleID],
+amp18sample_data$shan <- diversity(amp18obj$data$otu_counts[, amp18sample_data$SampleID],
                                     MARGIN = 2,
                                     index = "shannon")
 
-ggplot(amp18sample_data, aes(x = Name, y = alpha)) + 
-  geom_boxplot()
 
-anova_result <- aov(alpha ~ Name, amp18sample_data)
-summary(anova_result)
-
-tukey_result <- HSD.test(anova_result, "Name", group = TRUE)
-print(tukey_result)
-
-group_data <- tukey_result$groups[order(rownames(tukey_result$groups)),]
-ggsave("18sshan.png",ggplot(amp18sample_data, aes(x = Name, y = alpha)) +
-         geom_text(data = data.frame(),
-                   aes(x = rownames(group_data), y = max(amp18sample_data$alpha) + 1, label = group_data$groups),
-                   col = 'black',
-                   size = 10) +
-         geom_boxplot() + scale_y_continuous(limits = c(0, 6)) +
-         ggtitle("18S amplicons Shannon") +
-         xlab("") + theme_minimal() +
-         ylab("") + theme(text=element_text(size=28), #change font size of all text
-                          axis.text=element_text(size=28), #change font size of axis text
-                          axis.title=element_text(size=28), #change font size of axis titles
-                          plot.title=element_text(size=28), #change font size of plot title
-                          legend.text=element_text(size=28), #change font size of legend text
-                          legend.title=element_text(size=28))) #change font size of legend title
 
 ##########invsimpson
-amp18sample_data$alpha <- diversity(amp18obj$data$otu_counts[, amp18sample_data$SampleID],
+amp18sample_data$sim <- diversity(amp18obj$data$otu_counts[, amp18sample_data$SampleID],
                                     MARGIN = 2,
                                     index = "invsimpson")
-hist(amp18sample_data$alpha)
-library(ggplot2)
-ggplot(amp18sample_data, aes(x = Name, y = alpha)) + 
-  geom_boxplot()
 
-anova_result <- aov(alpha ~ Name, amp18sample_data)
-summary(anova_result)
-library(agricolae)
-amp18tukey_result <- HSD.test(anova_result, "Name", group = TRUE)
-print(tukey_result)
 
-amp18group_data <- amp18tukey_result$groups[order(rownames(amp18tukey_result$groups)),]
-ggsave("18ssim.png",ggplot(amp18sample_data, aes(x = Name, y = alpha)) +
-         geom_text(data = data.frame(),
-                   aes(x = rownames(group_data), y = max(amp18sample_data$alpha) + 1, label = amp18group_data$groups),
-                   col = 'black',
-                   size = 10) +
-         geom_boxplot() + scale_y_continuous(limits = c(0, 100)) +
-         ggtitle("18S amplicons Inverse Simpson") +
-         xlab("") + theme_minimal() +
-         ylab("") + theme(text=element_text(size=28), #change font size of all text
-                          axis.text=element_text(size=28), #change font size of axis text
-                          axis.title=element_text(size=28), #change font size of axis titles
-                          plot.title=element_text(size=28), #change font size of plot title
-                          legend.text=element_text(size=28), #change font size of legend text
-                          legend.title=element_text(size=28))) #change font size of legend title
+#### COPYING DATA TO EXCEL
+clipr::write_clip(Xsample_data)
 
+#### plotting
+# Libraries
+library(tidyverse)
+library(hrbrthemes)
+library(viridis)
+
+# create a dataset
+data <- read.csv("indices.csv")
+data
+# Plot
+data %>%
+  ggplot( aes(x=X, y=EH, fill=Name)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+  geom_jitter(color="black", size=2, alpha=0.9) +
+  theme_ipsum() +
+  theme(
+    legend.position="none",
+    plot.title = element_text(size=11)
+  ) +
+  ggtitle("Shannon Equitability Index") +
+  xlab("") + ylab("")
+
+###shan
+
+data %>%
+  ggplot( aes(x=X, y=shan, fill=Name)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+  geom_jitter(color="black", size=2, alpha=0.9) +
+  theme_ipsum() +
+  theme(
+    legend.position="none",
+    plot.title = element_text(size=11)
+  ) +
+  ggtitle("Shannon diversity Index") +
+  xlab("") + ylab("")
+
+### inv sim
+data %>%
+  ggplot( aes(x=X, y=invsim, fill=Name)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+  geom_jitter(color="black", size=2, alpha=0.9) +
+  theme_ipsum() +
+  theme(
+    legend.position="none",
+    plot.title = element_text(size=11)
+  ) +
+  ggtitle("Inverse Simpson") +
+  xlab("") + ylab("")
 
 
