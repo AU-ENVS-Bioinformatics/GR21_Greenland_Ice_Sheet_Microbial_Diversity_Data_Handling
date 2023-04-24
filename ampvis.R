@@ -41,3 +41,30 @@ ggsave("eukhmval.png", print(amp_heatmap(euk, group_by = "Environment",
                                          color_vector = c("white", "royalblue"))
                              + theme(axis.text.x = element_text(angle = 90, size=20, hjust = 0.5), axis.text.y = element_text(size=15))))
 
+
+############ Venn diagrams #########
+
+###Prokayrotes amplicons
+
+prok <- amp_load(
+  otutable ="masterotunocp.csv", metadata = "prokmeta.txt", taxonomy = "proktax.csv"
+)
+
+amp_venn(prok, group_by = "Environment", cut_a = 0, cut_f = 1) 
+
+
+### euk amplicons
+
+euk <- amp_load(
+  otutable ="eukotu.csv", metadata = "eukmeta.txt", taxonomy = "euktax.csv"
+)
+
+amp_venn(euk, group_by = "Environment", cut_a = 0, cut_f = 1) 
+
+### mgs all
+
+mgsprok <- amp_load(
+  otutable ="mgsotuprok.csv", metadata = "mgsmeta.txt", taxonomy = "mgsproktax.csv"
+)
+
+amp_venn(mgsprok, group_by = "Environment", cut_a = 0, cut_f = 1) 
